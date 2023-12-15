@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "setup-project": "npm i && cd client && npm i",
+    "setup-production-app": "npm i && cd client && npm i && npm run build",
     "dev":"nodemon server.js",
     "watch":"node --watch server.js",
     "server":"nodemon server.js",
