@@ -2,7 +2,8 @@ import { StatusCodes } from "http-status-codes";
 import User from '../models/UserModel.js';
 import Job from '../models/JobModel.js';
 import cloudinary from 'cloudinary';
-import {promises as fs} from 'fs';
+//import {promises as fs} from 'fs';
+import { formatImage } from "../middleware/multerMiddleware.js";
 
 
 export const getCurrentUser= async (req,res)=>{
@@ -24,20 +25,39 @@ export const updateUser= async (req,res)=>{
     const newUser = {...req.body};
     delete newUser.password
 
+    //disk storage method on multer==============================================================
+    //if the user upload a file
+    // if(req.file){
+    //     //we upload the file to cloudinary, and we will get an object
+    //     const response=await cloudinary.v2.uploader.upload(req.file.path);
+    //     //after we successfully uploading the file to cloudinary, we delete the file we have uploaded to our server (to public/uploads folder) through the form in previous process
+    //     await fs.unlink(req.file.path);
+
+    //     //we grab the url of the picture we uploaded to cloudinary
+    //     newUser.avatar=response.secure_url;
+    //     //we grab the public_id of the picture we uploaded to cloudinary
+    //     newUser.avatarPublicId=response.public_id;
+    // }
+    //===========================================================================================
+    
+
+    //memory storage method on multer============================================================
     //if the user upload a file
     if(req.file){
+        const file =formatImage(req.file);
+        
         //we upload the file to cloudinary, and we will get an object
-        const response=await cloudinary.v2.uploader.upload(req.file.path);
-        //after we successfully uploading the file to cloudinary, we delete the file we have uploaded to our server (to public/uploads folder) through the form in previous process
-        await fs.unlink(req.file.path);
+        const response=await cloudinary.v2.uploader.upload(file);
+        
 
         //we grab the url of the picture we uploaded to cloudinary
         newUser.avatar=response.secure_url;
         //we grab the public_id of the picture we uploaded to cloudinary
         newUser.avatarPublicId=response.public_id;
     }
-    
-    //we update the user and the response will give the old instance of the user as we don't key it field {new:true} in the update method.
+    //===========================================================================================
+
+    //we update the user and the response will give the old instance of the user as we don't key in field {new:true} in the update method.
     const updatedUser=await User.findByIdAndUpdate(req.user.userId,newUser);
 
     //if the user upload a new file and previous was exist before upadating process, then we want to delete the previous file in cloudinary.
